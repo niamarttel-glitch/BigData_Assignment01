@@ -1,5 +1,6 @@
 import time
 import statistics
+import sys
 
 def leer_matrices(nombre_archivo):
     with open(nombre_archivo, 'r') as f:
@@ -25,29 +26,30 @@ def multiplicar_triple_bucle(n, A, B):
                 C[i][j] += A[i][k] * B[k][j]
     return C
 
-# 1. Cargar datos fuera de la región de tiempo
-nombre_archivo = "matrices_prueba_3.txt"
-n, A, B = leer_matrices(nombre_archivo)
+if __name__ == "__main__":
+    # Lee la ruta enviada por la consola (benchmark.py)
+    nombre_archivo = sys.argv[1] if len(sys.argv) > 1 else "data/matrices_prueba_3.txt"
+    n, A, B = leer_matrices(nombre_archivo)
 
-# 2. Warm-up (Ejecución de calentamiento)
-_ = multiplicar_triple_bucle(n, A, B)
+    # 1. Warm-up
+    _ = multiplicar_triple_bucle(n, A, B)
 
-# 3. Protocolo de medición (5 repeticiones)
-num_repeticiones = 5
-tiempos_ms = []
+    # 2. Medición de 5 repeticiones
+    num_repeticiones = 5
+    tiempos_ms = []
 
-print(f"--- Midiendo Python ({n}x{n}) ---")
-for rep in range(num_repeticiones):
-    inicio = time.perf_counter()
-    C = multiplicar_triple_bucle(n, A, B)
-    fin = time.perf_counter()
-    
-    tiempo_ms = (fin - inicio) * 1000.0
-    tiempos_ms.append(tiempo_ms)
-    print(f"Repetición {rep + 1}: {tiempo_ms:.4f} ms")
+    print(f"--- Midiendo Python ({n}x{n}) ---")
+    for rep in range(num_repeticiones):
+        inicio = time.perf_counter()
+        C = multiplicar_triple_bucle(n, A, B)
+        fin = time.perf_counter()
+        
+        tiempo_ms = (fin - inicio) * 1000.0
+        tiempos_ms.append(tiempo_ms)
+        print(f"Repetición {rep + 1}: {tiempo_ms:.4f} ms")
 
-# 4. Cálculo de la mediana (métrica central exigida)
-mediana_ms = statistics.median(tiempos_ms)
-print("\n--- Resultados ---")
-print(f"Tiempos raw: {[round(t, 4) for t in tiempos_ms]} ms")
-print(f"Mediana: {mediana_ms:.4f} ms")
+    # 3. Mediana
+    mediana_ms = statistics.median(tiempos_ms)
+    print("\n--- Resultados ---")
+    print(f"Tiempos raw: {[round(t, 4) for t in tiempos_ms]} ms")
+    print(f"Mediana: {mediana_ms:.4f} ms")

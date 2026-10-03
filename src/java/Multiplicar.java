@@ -7,7 +7,6 @@ import java.util.Scanner;
 public class Multiplicar {
 
     public static void multiplicarTripleBucle(int n, double[][] A, double[][] B, double[][] C) {
-        // Reiniciar C a cero antes de cada multiplicación
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
                 C[i][j] = 0.0;
@@ -24,8 +23,11 @@ public class Multiplicar {
     }
 
     public static void main(String[] args) {
+        // Lee la ruta pasada como argumento o usa la ruta por defecto
+        String nombreArchivo = (args.length > 0) ? args[0] : "data/matrices_prueba_3.txt";
+
         try {
-            File archivo = new File("matrices_prueba_3.txt");
+            File archivo = new File(nombreArchivo);
             Scanner scanner = new Scanner(archivo);
             scanner.useLocale(Locale.US);
 
@@ -83,7 +85,7 @@ public class Multiplicar {
             System.out.printf(Locale.US, "Mediana: %.4f ms\n", medianaMs);
 
         } catch (FileNotFoundException e) {
-            System.out.println("No se encontró el archivo matrices_prueba_3.txt");
+            System.out.println("No se encontró el archivo: " + nombreArchivo);
         }
     }
 }

@@ -2,8 +2,23 @@
 #include <stdlib.h>
 #include <windows.h>
 
-// Función auxiliar para ordenar los tiempos y obtener la mediana
-int comparar_doubles(const void *a, const void *b) {
+void multiplicar_triple_bucle(int n, double **A, double **B, double **C) {
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            C[i][j] = 0.0;
+        }
+    }
+
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            for (int k = 0; k < n; k++) {
+                C[i][j] += A[i][k] * B[k][j];
+            }
+        }
+    }
+}
+
+int compare_doubles(const void *a, const void *b) {
     double arg1 = *(const double *)a;
     double arg2 = *(const double *)b;
     if (arg1 < arg2) return -1;
@@ -11,74 +26,80 @@ int comparar_doubles(const void *a, const void *b) {
     return 0;
 }
 
-// Algoritmo de multiplicación
-void multiplicar_triple_bucle(int n, const double *A, const double *B, double *C) {
-    // Reiniciar C a cero antes de cada multiplicación
-    for (int i = 0; i < n * n; i++) C[i] = 0.0;
+int main(int argc, char *argv[]) {
+    // Lee la ruta pasada como argumento o usa la ruta por defecto
+    const char *nombre_archivo = (argc > 1) ? argv[1] : "data/matrices_prueba_3.txt";
 
-    for (int i = 0; i < n; i++) {
-        for (int j = 0; j < n; j++) {
-            for (int k = 0; k < n; k++) {
-                C[i * n + j] += A[i * n + k] * B[k * n + j];
-            }
-        }
-    }
-}
-
-int main() {
-    FILE *f = fopen("matrices_prueba_3.txt", "r");
+    FILE *f = fopen(nombre_archivo, "r");
     if (f == NULL) {
-        printf("Error: no se pudo abrir el archivo de entrada.\n");
+        printf("Error: no se pudo abrir el archivo %s\n", nombre_archivo);
         return 1;
     }
 
     int n;
     if (fscanf(f, "%d", &n) != 1) {
-        printf("Error al leer la dimensión n.\n");
+        printf("Error al leer la dimension.\n");
         fclose(f);
         return 1;
     }
 
-    // Reservar memoria fuera del cronómetro
-    double *A = (double *)malloc(n * n * sizeof(double));
-    double *B = (double *)malloc(n * n * sizeof(double));
-    double *C = (double *)malloc(n * n * sizeof(double));
+    // Reserva dinámica de memoria para las matrices
+    double **A = (double **)malloc(n * sizeof(double *));
+    double **B = (double **)malloc(n * sizeof(double *));
+    double **C = (double **)malloc(n * sizeof(double *));
+    for (int i = 0; i < n; i++) {
+        A[i] = (double *)malloc(n * sizeof(double));
+        B[i] = (double *)malloc(n * sizeof(double));
+        C[i] = (double *)malloc(n * sizeof(double));
+    }
 
-    for (int i = 0; i < n * n; i++) fscanf(f, "%lf", &A[i]);
-    for (int i = 0; i < n * n; i++) fscanf(f, "%lf", &B[i]);
+    // Lectura de datos
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            fscanf(f, "%lf", &A[i][j]);
+        }
+    }
+
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            fscanf(f, "%lf", &B[i][j]);
+        }
+    }
     fclose(f);
 
-    // Configurar temporizador de alta frecuencia de Windows
-    LARGE_INTEGER frecuencia, inicio, fin;
-    QueryPerformanceFrequency(&frecuencia);
-
-    // 1. Warm-up (Ejecución de calentamiento fuera de la medición)
+    // 1. Warm-up (Ejecución de calentamiento)
     multiplicar_triple_bucle(n, A, B, C);
 
     // 2. Medición de 5 repeticiones
     int num_repeticiones = 5;
     double tiempos_ms[5];
+    LARGE_INTEGER frequency, start, end;
+    QueryPerformanceFrequency(&frequency);
 
     printf("--- Midiendo C (%dx%d) ---\n", n, n);
     for (int rep = 0; rep < num_repeticiones; rep++) {
-        QueryPerformanceCounter(&inicio);
+        QueryPerformanceCounter(&start);
         multiplicar_triple_bucle(n, A, B, C);
-        QueryPerformanceCounter(&fin);
+        QueryPerformanceCounter(&end);
 
-        double tiempo_ms = (double)(fin.QuadPart - inicio.QuadPart) * 1000.0 / (double)frecuencia.QuadPart;
+        double tiempo_ms = ((double)(end.QuadPart - start.QuadPart) * 1000.0) / frequency.QuadPart;
         tiempos_ms[rep] = tiempo_ms;
-        printf("Repetición %d: %.4f ms\n", rep + 1, tiempo_ms);
+        printf("Repeticion %d: %.4f ms\n", rep + 1, tiempo_ms);
     }
 
-    // 3. Obtener mediana
-    double tiempos_ordenados[5];
-    for (int i = 0; i < num_repeticiones; i++) tiempos_ordenados[i] = tiempos_ms[i];
-    qsort(tiempos_ordenados, num_repeticiones, sizeof(double), comparar_doubles);
-    double mediana_ms = tiempos_ordenados[num_repeticiones / 2];
+    // 3. Cálculo de la mediana
+    qsort(tiempos_ms, num_repeticiones, sizeof(double), compare_doubles);
+    double mediana_ms = tiempos_ms[num_repeticiones / 2];
 
     printf("\n--- Resultados ---\n");
     printf("Mediana: %.4f ms\n", mediana_ms);
 
+    // Liberar memoria
+    for (int i = 0; i < n; i++) {
+        free(A[i]);
+        free(B[i]);
+        free(C[i]);
+    }
     free(A);
     free(B);
     free(C);

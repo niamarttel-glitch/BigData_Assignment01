@@ -1,3 +1,4 @@
+import sys
 import random
 
 def generar_matrices(n, nombre_archivo):
@@ -5,7 +6,7 @@ def generar_matrices(n, nombre_archivo):
         # 1. Escribir el tamaño
         f.write(f"{n}\n")
         
-        # 2. Generar y escribir Matriz A (usamos floats simples para probar)
+        # 2. Generar y escribir Matriz A
         for _ in range(n):
             fila = [str(float(random.randint(1, 10))) for _ in range(n)]
             f.write(" ".join(fila) + "\n")
@@ -15,6 +16,10 @@ def generar_matrices(n, nombre_archivo):
             fila = [str(float(random.randint(1, 10))) for _ in range(n)]
             f.write(" ".join(fila) + "\n")
 
-# Generamos una matriz de 3x3 para empezar
-generar_matrices(3, "matrices_prueba_3.txt")
-print("Archivo generado con éxito.")
+if __name__ == "__main__":
+    # Lee 'n' y 'nombre_archivo' de la consola si existen, o usa valores por defecto
+    n = int(sys.argv[1]) if len(sys.argv) > 1 else 3
+    archivo = sys.argv[2] if len(sys.argv) > 2 else f"data/matrices_{n}.txt"
+    
+    generar_matrices(n, archivo)
+    print(f"Archivo '{archivo}' ({n}x{n}) generado con éxito.")
