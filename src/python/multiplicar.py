@@ -1,6 +1,7 @@
 import time
 import statistics
 import sys
+import tracemalloc
 
 def leer_matrices(nombre_archivo):
     with open(nombre_archivo, 'r') as f:
@@ -26,17 +27,30 @@ def multiplicar_triple_bucle(n, A, B):
                 C[i][j] += A[i][k] * B[k][j]
     return C
 
+def test_correctitud():
+    # Prueba rápida con matrices 2x2 conocidas
+    A = [[1.0, 2.0], [3.0, 4.0]]
+    B = [[2.0, 0.0], [1.0, 2.0]]
+    esperado = [[4.0, 4.0], [10.0, 8.0]]
+    resultado = multiplicar_triple_bucle(2, A, B)
+    assert resultado == esperado, "Error en la validación de correctitud"
+    print("Correctitud validada exitosamente con matriz de prueba 2x2.")
+
 if __name__ == "__main__":
-    # Lee la ruta enviada por la consola (benchmark.py)
     nombre_archivo = sys.argv[1] if len(sys.argv) > 1 else "data/matrices_3.txt"
     n, A, B = leer_matrices(nombre_archivo)
+
+    test_correctitud()
 
     # 1. Warm-up
     _ = multiplicar_triple_bucle(n, A, B)
 
-    # 2. Medición de 5 repeticiones
+    # 2. Medición de 5 repeticiones (Tiempo y Memoria)
     num_repeticiones = 5
     tiempos_ms = []
+    
+    # Iniciar el rastreo de memoria
+    tracemalloc.start()
 
     print(f"--- Midiendo Python ({n}x{n}) ---")
     for rep in range(num_repeticiones):
@@ -48,8 +62,16 @@ if __name__ == "__main__":
         tiempos_ms.append(tiempo_ms)
         print(f"Repetición {rep + 1}: {tiempo_ms:.4f} ms")
 
-    # 3. Mediana
+    # Capturar el pico de memoria usado
+    current, peak = tracemalloc.get_traced_memory()
+    tracemalloc.stop()
+    memoria_mb = peak / (1024 * 1024)
+
+    # 3. Resultados estadísticos
     mediana_ms = statistics.median(tiempos_ms)
+    variabilidad_ms = statistics.stdev(tiempos_ms) if len(tiempos_ms) > 1 else 0.0
+
     print("\n--- Resultados ---")
-    print(f"Tiempos raw: {[round(t, 4) for t in tiempos_ms]} ms")
     print(f"Mediana: {mediana_ms:.4f} ms")
+    print(f"Variabilidad (StdDev): {variabilidad_ms:.4f} ms")
+    print(f"Pico de Memoria: {memoria_mb:.4f} MB")

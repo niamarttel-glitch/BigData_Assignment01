@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <windows.h>
+#include <math.h>
+#include <psapi.h> // Necesario para medir la memoria en Windows
 
 void multiplicar_triple_bucle(int n, double **A, double **B, double **C) {
     for (int i = 0; i < n; i++) {
@@ -18,6 +20,33 @@ void multiplicar_triple_bucle(int n, double **A, double **B, double **C) {
     }
 }
 
+void test_correctitud() {
+    double *A_test[2], *B_test[2], *C_test[2];
+    double A_data[2][2] = {{1.0, 2.0}, {3.0, 4.0}};
+    double B_data[2][2] = {{2.0, 0.0}, {1.0, 2.0}};
+    double C_expected[2][2] = {{4.0, 4.0}, {10.0, 8.0}};
+
+    for (int i = 0; i < 2; i++) {
+        A_test[i] = A_data[i];
+        B_test[i] = B_data[i];
+        C_test[i] = (double *)malloc(2 * sizeof(double));
+    }
+
+    multiplicar_triple_bucle(2, A_test, B_test, C_test);
+
+    for (int i = 0; i < 2; i++) {
+        for (int j = 0; j < 2; j++) {
+            if (fabs(C_test[i][j] - C_expected[i][j]) > 1e-6) {
+                printf("Error en la validacion de correctitud.\n");
+                exit(1);
+            }
+        }
+    }
+    printf("Correctitud validada exitosamente con matriz de prueba 2x2.\n");
+    
+    for (int i = 0; i < 2; i++) free(C_test[i]);
+}
+
 int compare_doubles(const void *a, const void *b) {
     double arg1 = *(const double *)a;
     double arg2 = *(const double *)b;
@@ -27,7 +56,6 @@ int compare_doubles(const void *a, const void *b) {
 }
 
 int main(int argc, char *argv[]) {
-    // Lee la ruta pasada como argumento o usa la ruta por defecto
     const char *nombre_archivo = (argc > 1) ? argv[1] : "data/matrices_3.txt";
 
     FILE *f = fopen(nombre_archivo, "r");
@@ -43,7 +71,6 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    // Reserva dinámica de memoria para las matrices
     double **A = (double **)malloc(n * sizeof(double *));
     double **B = (double **)malloc(n * sizeof(double *));
     double **C = (double **)malloc(n * sizeof(double *));
@@ -53,7 +80,6 @@ int main(int argc, char *argv[]) {
         C[i] = (double *)malloc(n * sizeof(double));
     }
 
-    // Lectura de datos
     for (int i = 0; i < n; i++) {
         for (int j = 0; j < n; j++) {
             fscanf(f, "%lf", &A[i][j]);
@@ -67,7 +93,10 @@ int main(int argc, char *argv[]) {
     }
     fclose(f);
 
-    // 1. Warm-up (Ejecución de calentamiento)
+    // Validación
+    test_correctitud();
+
+    // 1. Warm-up
     multiplicar_triple_bucle(n, A, B, C);
 
     // 2. Medición de 5 repeticiones
@@ -77,6 +106,8 @@ int main(int argc, char *argv[]) {
     QueryPerformanceFrequency(&frequency);
 
     printf("--- Midiendo C (%dx%d) ---\n", n, n);
+    double suma_tiempos = 0.0;
+    
     for (int rep = 0; rep < num_repeticiones; rep++) {
         QueryPerformanceCounter(&start);
         multiplicar_triple_bucle(n, A, B, C);
@@ -84,15 +115,32 @@ int main(int argc, char *argv[]) {
 
         double tiempo_ms = ((double)(end.QuadPart - start.QuadPart) * 1000.0) / frequency.QuadPart;
         tiempos_ms[rep] = tiempo_ms;
+        suma_tiempos += tiempo_ms;
         printf("Repeticion %d: %.4f ms\n", rep + 1, tiempo_ms);
     }
 
-    // 3. Cálculo de la mediana
+    // 3. Medición de Memoria (Pico de memoria del proceso en Windows)
+    PROCESS_MEMORY_COUNTERS pmc;
+    double memoria_mb = 0.0;
+    if (GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc))) {
+        memoria_mb = (double)pmc.PeakWorkingSetSize / (1024.0 * 1024.0);
+    }
+
+    // 4. Cálculos estadísticos (Mediana y Desviación Estándar)
+    double media = suma_tiempos / num_repeticiones;
+    double suma_varianzas = 0.0;
+    for(int i = 0; i < num_repeticiones; i++) {
+        suma_varianzas += pow(tiempos_ms[i] - media, 2);
+    }
+    double variabilidad_ms = sqrt(suma_varianzas / num_repeticiones);
+
     qsort(tiempos_ms, num_repeticiones, sizeof(double), compare_doubles);
     double mediana_ms = tiempos_ms[num_repeticiones / 2];
 
     printf("\n--- Resultados ---\n");
     printf("Mediana: %.4f ms\n", mediana_ms);
+    printf("Variabilidad (StdDev): %.4f ms\n", variabilidad_ms);
+    printf("Pico de Memoria: %.4f MB\n", memoria_mb);
 
     // Liberar memoria
     for (int i = 0; i < n; i++) {
