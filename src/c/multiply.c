@@ -2,9 +2,9 @@
 #include <stdlib.h>
 #include <windows.h>
 #include <math.h>
-#include <psapi.h> // Necesario para medir la memoria en Windows
+#include <psapi.h> // Required to measure memory in Windows
 
-void multiplicar_triple_bucle(int n, double **A, double **B, double **C) {
+void triple_loop_multiply(int n, double **A, double **B, double **C) {
     for (int i = 0; i < n; i++) {
         for (int j = 0; j < n; j++) {
             C[i][j] = 0.0;
@@ -20,7 +20,7 @@ void multiplicar_triple_bucle(int n, double **A, double **B, double **C) {
     }
 }
 
-void test_correctitud() {
+void test_correctness() {
     double *A_test[2], *B_test[2], *C_test[2];
     double A_data[2][2] = {{1.0, 2.0}, {3.0, 4.0}};
     double B_data[2][2] = {{2.0, 0.0}, {1.0, 2.0}};
@@ -32,17 +32,17 @@ void test_correctitud() {
         C_test[i] = (double *)malloc(2 * sizeof(double));
     }
 
-    multiplicar_triple_bucle(2, A_test, B_test, C_test);
+    triple_loop_multiply(2, A_test, B_test, C_test);
 
     for (int i = 0; i < 2; i++) {
         for (int j = 0; j < 2; j++) {
             if (fabs(C_test[i][j] - C_expected[i][j]) > 1e-6) {
-                printf("Error en la validacion de correctitud.\n");
+                printf("Error in correctness validation.\n");
                 exit(1);
             }
         }
     }
-    printf("Correctitud validada exitosamente con matriz de prueba 2x2.\n");
+    printf("Correctness successfully validated with 2x2 test matrix.\n");
     
     for (int i = 0; i < 2; i++) free(C_test[i]);
 }
@@ -56,17 +56,18 @@ int compare_doubles(const void *a, const void *b) {
 }
 
 int main(int argc, char *argv[]) {
-    const char *nombre_archivo = (argc > 1) ? argv[1] : "data/matrices_3.txt";
+    // Note: Default file changed to matrix_3.txt
+    const char *filename = (argc > 1) ? argv[1] : "data/matrix_3.txt";
 
-    FILE *f = fopen(nombre_archivo, "r");
+    FILE *f = fopen(filename, "r");
     if (f == NULL) {
-        printf("Error: no se pudo abrir el archivo %s\n", nombre_archivo);
+        printf("Error: could not open file %s\n", filename);
         return 1;
     }
 
     int n;
     if (fscanf(f, "%d", &n) != 1) {
-        printf("Error al leer la dimension.\n");
+        printf("Error reading the dimension.\n");
         fclose(f);
         return 1;
     }
@@ -93,56 +94,56 @@ int main(int argc, char *argv[]) {
     }
     fclose(f);
 
-    // Validación
-    test_correctitud();
+    // Validation
+    test_correctness();
 
     // 1. Warm-up
-    multiplicar_triple_bucle(n, A, B, C);
+    triple_loop_multiply(n, A, B, C);
 
-    // 2. Medición de 5 repeticiones
-    int num_repeticiones = 5;
-    double tiempos_ms[5];
+    // 2. Measurement of 5 repetitions
+    int num_repetitions = 5;
+    double times_ms[5];
     LARGE_INTEGER frequency, start, end;
     QueryPerformanceFrequency(&frequency);
 
-    printf("--- Midiendo C (%dx%d) ---\n", n, n);
-    double suma_tiempos = 0.0;
+    printf("--- Measuring C (%dx%d) ---\n", n, n);
+    double sum_times = 0.0;
     
-    for (int rep = 0; rep < num_repeticiones; rep++) {
+    for (int rep = 0; rep < num_repetitions; rep++) {
         QueryPerformanceCounter(&start);
-        multiplicar_triple_bucle(n, A, B, C);
+        triple_loop_multiply(n, A, B, C);
         QueryPerformanceCounter(&end);
 
-        double tiempo_ms = ((double)(end.QuadPart - start.QuadPart) * 1000.0) / frequency.QuadPart;
-        tiempos_ms[rep] = tiempo_ms;
-        suma_tiempos += tiempo_ms;
-        printf("Repeticion %d: %.4f ms\n", rep + 1, tiempo_ms);
+        double time_ms = ((double)(end.QuadPart - start.QuadPart) * 1000.0) / frequency.QuadPart;
+        times_ms[rep] = time_ms;
+        sum_times += time_ms;
+        printf("Repetition %d: %.4f ms\n", rep + 1, time_ms);
     }
 
-    // 3. Medición de Memoria (Pico de memoria del proceso en Windows)
+    // 3. Memory Measurement (Peak process memory in Windows)
     PROCESS_MEMORY_COUNTERS pmc;
-    double memoria_mb = 0.0;
+    double memory_mb = 0.0;
     if (GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc))) {
-        memoria_mb = (double)pmc.PeakWorkingSetSize / (1024.0 * 1024.0);
+        memory_mb = (double)pmc.PeakWorkingSetSize / (1024.0 * 1024.0);
     }
 
-    // 4. Cálculos estadísticos (Mediana y Desviación Estándar)
-    double media = suma_tiempos / num_repeticiones;
-    double suma_varianzas = 0.0;
-    for(int i = 0; i < num_repeticiones; i++) {
-        suma_varianzas += pow(tiempos_ms[i] - media, 2);
+    // 4. Statistical calculations (Median and Standard Deviation)
+    double mean = sum_times / num_repetitions;
+    double sum_variances = 0.0;
+    for(int i = 0; i < num_repetitions; i++) {
+        sum_variances += pow(times_ms[i] - mean, 2);
     }
-    double variabilidad_ms = sqrt(suma_varianzas / num_repeticiones);
+    double variability_ms = sqrt(sum_variances / num_repetitions);
 
-    qsort(tiempos_ms, num_repeticiones, sizeof(double), compare_doubles);
-    double mediana_ms = tiempos_ms[num_repeticiones / 2];
+    qsort(times_ms, num_repetitions, sizeof(double), compare_doubles);
+    double median_ms = times_ms[num_repetitions / 2];
 
-    printf("\n--- Resultados ---\n");
-    printf("Mediana: %.4f ms\n", mediana_ms);
-    printf("Variabilidad (StdDev): %.4f ms\n", variabilidad_ms);
-    printf("Pico de Memoria: %.4f MB\n", memoria_mb);
+    printf("\n--- Results ---\n");
+    printf("Median: %.4f ms\n", median_ms);
+    printf("Variability (StdDev): %.4f ms\n", variability_ms);
+    printf("Peak Memory: %.4f MB\n", memory_mb);
 
-    // Liberar memoria
+    // Free memory
     for (int i = 0; i < n; i++) {
         free(A[i]);
         free(B[i]);
