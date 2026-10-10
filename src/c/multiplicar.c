@@ -28,7 +28,7 @@ int compare_doubles(const void *a, const void *b) {
 
 int main(int argc, char *argv[]) {
     // Lee la ruta pasada como argumento o usa la ruta por defecto
-    const char *nombre_archivo = (argc > 1) ? argv[1] : "data/matrices_prueba_3.txt";
+    const char *nombre_archivo = (argc > 1) ? argv[1] : "data/matrices_3.txt";
 
     FILE *f = fopen(nombre_archivo, "r");
     if (f == NULL) {

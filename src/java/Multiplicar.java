@@ -24,7 +24,7 @@ public class Multiplicar {
 
     public static void main(String[] args) {
         // Lee la ruta pasada como argumento o usa la ruta por defecto
-        String nombreArchivo = (args.length > 0) ? args[0] : "data/matrices_prueba_3.txt";
+        String nombreArchivo = (args.length > 0) ? args[0] : "data/matrices_3.txt";
 
         try {
             File archivo = new File(nombreArchivo);

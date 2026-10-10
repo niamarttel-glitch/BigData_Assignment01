@@ -1,0 +1,21 @@
+# Ejecutables de C
+*.exe
+*.o
+multiplicar
+
+# Archivos compilados de Java
+*.class
+
+# Archivos temporales o de entorno de Python
+__pycache__/
+*.pyc
+
+# Archivos de datos generados muy grandes (opcional)
+# matrices_*.txt
+# Archivos compilados e intermedios
+*.exe
+*.class
+
+# Archivos de datos generados
+data/*.txt
+matrices_prueba_3.txt

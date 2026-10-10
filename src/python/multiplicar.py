@@ -28,7 +28,7 @@ def multiplicar_triple_bucle(n, A, B):
 
 if __name__ == "__main__":
     # Lee la ruta enviada por la consola (benchmark.py)
-    nombre_archivo = sys.argv[1] if len(sys.argv) > 1 else "data/matrices_prueba_3.txt"
+    nombre_archivo = sys.argv[1] if len(sys.argv) > 1 else "data/matrices_3.txt"
     n, A, B = leer_matrices(nombre_archivo)
 
     # 1. Warm-up
