@@ -26,7 +26,7 @@ This repository contains the source code and reproducibility materials for a com
 ```
 
 
-##Prerequisites
+## Prerequisites
 To reproduce this benchmark on a Windows machine, ensure you have the following installed and added to your system's PATH:
 
 1. Python 3.x (with matplotlib installed: pip install matplotlib).
@@ -35,7 +35,7 @@ To reproduce this benchmark on a Windows machine, ensure you have the following 
 
 3. Java Development Kit (JDK 17 or higher) to compile and run the Java code.
 
-##How to Reproduce the Experiment
+## How to Reproduce the Experiment
 **1. Run the Benchmark**
 The entire process (compiling C and Java code, generating matrices of sizes 10 to 500, and measuring execution time and memory) is fully automated by the benchmark.py script.
 
@@ -54,7 +54,7 @@ This will read the generated metrics and save a performance_graph.png image in t
 
 
 
-##Hardware Environment Used for the Report
+## Hardware Environment Used for the Report
 CPU: 12th Gen Intel Core i5-12450H (2.00 GHz)
 
 RAM: 16 GB
