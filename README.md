@@ -23,10 +23,10 @@ This repository contains the source code and reproducibility materials for a com
 ├── results.md               # Markdown table with the output metrics (auto-generated)
 ├── performance_graph.png    # Performance plot (auto-generated)
 └── README.md                # This file
+```
 
 
-
-Prerequisites
+##Prerequisites
 To reproduce this benchmark on a Windows machine, ensure you have the following installed and added to your system's PATH:
 
 1. Python 3.x (with matplotlib installed: pip install matplotlib).
@@ -35,8 +35,8 @@ To reproduce this benchmark on a Windows machine, ensure you have the following 
 
 3. Java Development Kit (JDK 17 or higher) to compile and run the Java code.
 
-How to Reproduce the Experiment
-1. Run the Benchmark
+##How to Reproduce the Experiment
+**1. Run the Benchmark**
 The entire process (compiling C and Java code, generating matrices of sizes 10 to 500, and measuring execution time and memory) is fully automated by the benchmark.py script.
 
 Run the following command from the root directory of the project:
@@ -46,7 +46,7 @@ python src/python/benchmark.py
 Note: The execution for $N=500$ in Python will take a significant amount of time (approx. 100 seconds). Please let the script finish. Once completed, it will automatically generate the results.md file.
 
 
-2. Generate the Plot
+**2. Generate the Plot**
 After the benchmark has finished and generated the results.md file, you can generate the comparative logarithmic chart by running:
 python src/python/plot.py
 
@@ -54,7 +54,7 @@ This will read the generated metrics and save a performance_graph.png image in t
 
 
 
-Hardware Environment Used for the Report
+##Hardware Environment Used for the Report
 CPU: 12th Gen Intel Core i5-12450H (2.00 GHz)
 
 RAM: 16 GB
